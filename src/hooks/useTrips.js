@@ -77,12 +77,20 @@ export function useTrips() {
 
     if (isSupabaseConfigured() && navigator.onLine) {
       setSyncing(true);
-      fetchTripsFromCloud().then(cloudTrips => {
+      fetchTripsFromCloud().then(async (cloudTrips) => {
         if (!cloudTrips) { setSyncing(false); return; }
         const localTrips = getTrips();
         const merged = mergeByIdAndTime(localTrips, cloudTrips);
         setTrips(merged);
         saveTrips(merged);
+
+        // Push any local-only trips to cloud
+        const cloudIds = new Set(cloudTrips.map(t => t.id));
+        const localOnly = merged.filter(t => !cloudIds.has(t.id));
+        for (const trip of localOnly) {
+          await upsertTripToCloud(trip);
+        }
+
         setSyncing(false);
         refreshPending();
       });
@@ -102,11 +110,18 @@ export function useTrips() {
 
       // Also fetch from cloud and merge
       if (isSupabaseConfigured() && navigator.onLine) {
-        fetchExpensesFromCloud(activeTripId).then(cloudExpenses => {
+        fetchExpensesFromCloud(activeTripId).then(async (cloudExpenses) => {
           if (!cloudExpenses) return;
           const merged = mergeByIdAndTime(local, cloudExpenses);
           setExpenses(merged);
           saveExpenses(activeTripId, merged);
+
+          // Push any local-only expenses to cloud
+          const cloudIds = new Set(cloudExpenses.map(e => e.id));
+          const localOnly = merged.filter(e => !cloudIds.has(e.id));
+          for (const expense of localOnly) {
+            await upsertExpenseToCloud(activeTripId, expense);
+          }
         });
       }
     } else {
