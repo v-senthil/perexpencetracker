@@ -43,37 +43,37 @@ export default function TripForm({ onCreateTrip }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="min-w-0">
+      <div className="space-y-3">
+        <div>
           <label className="block text-sm font-medium text-text-secondary mb-1.5">
             Start Date
           </label>
           <div className="relative">
-            <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
             <input
               type="date"
               value={startDate}
               onChange={e => setStartDate(e.target.value)}
-              className="w-full pl-8 pr-1 py-3 rounded-xl border border-border bg-white
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-white
                          focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none
-                         text-text-primary text-sm transition-all"
+                         text-text-primary transition-all"
             />
           </div>
         </div>
-        <div className="min-w-0">
+        <div>
           <label className="block text-sm font-medium text-text-secondary mb-1.5">
             End Date
           </label>
           <div className="relative">
-            <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
             <input
               type="date"
               value={endDate}
               onChange={e => setEndDate(e.target.value)}
               min={startDate}
-              className="w-full pl-8 pr-1 py-3 rounded-xl border border-border bg-white
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-white
                          focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none
-                         text-text-primary text-sm transition-all"
+                         text-text-primary transition-all"
             />
           </div>
         </div>
