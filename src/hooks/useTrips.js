@@ -181,6 +181,39 @@ export function useTrips() {
     deleteExpenseFromCloud(expenseId).then(refreshPending);
   }, [refreshPending]);
 
+  const refresh = useCallback(async () => {
+    if (!isSupabaseConfigured() || !navigator.onLine) return;
+    setSyncing(true);
+    try {
+      await flushSyncQueue();
+      refreshPending();
+
+      const cloudTrips = await fetchTripsFromCloud();
+      if (cloudTrips) {
+        const localTrips = getTrips();
+        const merged = mergeByIdAndTime(localTrips, cloudTrips);
+        setTrips(merged);
+        saveTrips(merged);
+      }
+
+      if (activeTripId) {
+        const cloudExpenses = await fetchExpensesFromCloud(activeTripId);
+        if (cloudExpenses) {
+          const localExpenses = getExpenses(activeTripId);
+          const merged = mergeByIdAndTime(localExpenses, cloudExpenses);
+          setExpenses(merged);
+          saveExpenses(activeTripId, merged);
+        }
+      }
+
+      const connected = await checkDbConnection();
+      setDbConnected(connected);
+    } finally {
+      setSyncing(false);
+      refreshPending();
+    }
+  }, [activeTripId, refreshPending]);
+
   return {
     trips,
     activeTrip,
@@ -196,6 +229,7 @@ export function useTrips() {
     addExpense,
     updateExpense,
     deleteExpense,
+    refresh,
   };
 }
 

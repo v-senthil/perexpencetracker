@@ -4,6 +4,7 @@ import HomeScreen from './components/HomeScreen';
 import Dashboard from './components/Dashboard';
 import OnlineStatus from './components/OnlineStatus';
 import InstallPrompt from './components/InstallPrompt';
+import PullToRefresh from './components/PullToRefresh';
 
 export default function App() {
   const {
@@ -21,10 +22,11 @@ export default function App() {
     addExpense,
     updateExpense,
     deleteExpense,
+    refresh,
   } = useTrips();
 
   return (
-    <>
+    <PullToRefresh onRefresh={refresh}>
       <OnlineStatus isOnline={isOnline} />
       <Toaster
         position="top-center"
@@ -67,7 +69,7 @@ export default function App() {
       )}
 
       <InstallPrompt />
-    </>
+    </PullToRefresh>
   );
 }
 
