@@ -4,7 +4,7 @@ import TripList from './TripList';
 import SyncStatusBar from './SyncStatusBar';
 import { useState } from 'react';
 
-export default function HomeScreen({ trips, onCreateTrip, onOpenTrip, onDeleteTrip, isOnline, dbConnected, syncing, pendingSync }) {
+export default function HomeScreen({ trips, onCreateTrip, onOpenTrip, onDeleteTrip, isOnline, dbConnected, syncing, pendingSync, onHardRefresh }) {
   const [showForm, setShowForm] = useState(!trips.length);
 
   return (
@@ -38,6 +38,7 @@ export default function HomeScreen({ trips, onCreateTrip, onOpenTrip, onDeleteTr
               dbConnected={dbConnected}
               syncing={syncing}
               pendingSync={pendingSync}
+              onHardRefresh={onHardRefresh}
             />
           </div>
         </div>

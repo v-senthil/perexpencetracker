@@ -1,8 +1,12 @@
+import { useState } from 'react';
 import { MapPin, Calendar, Wallet, ChevronRight, Trash2 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../utils/helpers';
 import { getExpenses } from '../utils/storage';
+import ConfirmModal from './ConfirmModal';
 
 export default function TripList({ trips, onOpenTrip, onDeleteTrip }) {
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
   if (!trips.length) return null;
 
   return (
@@ -55,7 +59,7 @@ export default function TripList({ trips, onOpenTrip, onDeleteTrip }) {
 
               <div className="flex items-center gap-1 ml-3 shrink-0">
                 <button
-                  onClick={(e) => { e.stopPropagation(); onDeleteTrip(trip.id); }}
+                  onClick={(e) => { e.stopPropagation(); setDeleteTarget(trip); }}
                   className="p-2 rounded-lg hover:bg-red-50 text-text-muted hover:text-danger transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -66,6 +70,17 @@ export default function TripList({ trips, onOpenTrip, onDeleteTrip }) {
           </div>
         );
       })}
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        title="Delete Trip"
+        message={deleteTarget ? `Are you sure you want to delete "${deleteTarget.name}"? All expenses in this trip will be lost.` : ''}
+        onConfirm={() => {
+          if (deleteTarget) onDeleteTrip(deleteTarget.id);
+          setDeleteTarget(null);
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

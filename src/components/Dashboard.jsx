@@ -7,6 +7,7 @@ import InsightsPanel from './InsightsPanel';
 import SmartSuggestions from './SmartSuggestions';
 import TripSummary from './TripSummary';
 import SyncStatusBar from './SyncStatusBar';
+import ConfirmModal from './ConfirmModal';
 import { formatCurrency } from '../utils/helpers';
 import { getCategoryInfo } from '../utils/categorizer';
 
@@ -17,12 +18,13 @@ const TABS = [
   { id: 'summary', label: 'Summary', icon: Info },
 ];
 
-export default function Dashboard({ trip, expenses, onBack, onAddExpense, onUpdateExpense, onDeleteExpense, onUpdateTrip, isOnline, dbConnected, syncing, pendingSync }) {
+export default function Dashboard({ trip, expenses, onBack, onAddExpense, onUpdateExpense, onDeleteExpense, onUpdateTrip, isOnline, dbConnected, syncing, pendingSync, onHardRefresh }) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showModal, setShowModal] = useState(false);
   const [editExpense, setEditExpense] = useState(null);
   const [editingBudget, setEditingBudget] = useState(false);
   const [budgetInput, setBudgetInput] = useState('');
+  const [deleteExpenseTarget, setDeleteExpenseTarget] = useState(null);
 
   const totalSpent = expenses.reduce((s, e) => s + e.amount, 0);
   const recentExpenses = [...expenses].slice(0, 5);
@@ -95,6 +97,7 @@ export default function Dashboard({ trip, expenses, onBack, onAddExpense, onUpda
             dbConnected={dbConnected}
             syncing={syncing}
             pendingSync={pendingSync}
+            onHardRefresh={onHardRefresh}
           />
         </div>
       </div>
@@ -209,7 +212,7 @@ export default function Dashboard({ trip, expenses, onBack, onAddExpense, onUpda
         {activeTab === 'expenses' && (
           <ExpenseList
             expenses={expenses}
-            onDeleteExpense={onDeleteExpense}
+            onDeleteExpense={(id) => setDeleteExpenseTarget(id)}
             onEditExpense={handleEdit}
           />
         )}
@@ -262,6 +265,18 @@ export default function Dashboard({ trip, expenses, onBack, onAddExpense, onUpda
         onAddExpense={onAddExpense}
         onUpdateExpense={onUpdateExpense}
         editExpense={editExpense}
+      />
+
+      {/* Delete expense confirmation */}
+      <ConfirmModal
+        isOpen={!!deleteExpenseTarget}
+        title="Delete Expense"
+        message="Are you sure you want to delete this expense?"
+        onConfirm={() => {
+          if (deleteExpenseTarget) onDeleteExpense(deleteExpenseTarget);
+          setDeleteExpenseTarget(null);
+        }}
+        onCancel={() => setDeleteExpenseTarget(null)}
       />
     </div>
   );

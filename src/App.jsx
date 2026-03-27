@@ -24,6 +24,7 @@ export default function App() {
     updateExpense,
     deleteExpense,
     refresh,
+    hardRefresh,
   } = useTrips();
 
   return (
@@ -56,6 +57,7 @@ export default function App() {
           dbConnected={dbConnected}
           syncing={syncing}
           pendingSync={pendingSync}
+          onHardRefresh={hardRefresh}
         />
       ) : (
         <HomeScreen
@@ -67,6 +69,7 @@ export default function App() {
           dbConnected={dbConnected}
           syncing={syncing}
           pendingSync={pendingSync}
+          onHardRefresh={hardRefresh}
         />
       )}
 

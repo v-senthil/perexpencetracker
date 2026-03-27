@@ -1,6 +1,6 @@
 import { Database, CloudOff, RefreshCw, CheckCircle2, WifiOff } from 'lucide-react';
 
-export default function SyncStatusBar({ isOnline, dbConnected, syncing, pendingSync }) {
+export default function SyncStatusBar({ isOnline, dbConnected, syncing, pendingSync, onHardRefresh }) {
   let icon, label, bgClass, textClass;
 
   if (!isOnline) {
@@ -31,12 +31,16 @@ export default function SyncStatusBar({ isOnline, dbConnected, syncing, pendingS
   }
 
   return (
-    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${bgClass} ${textClass}`}>
+    <button
+      onClick={onHardRefresh}
+      disabled={syncing}
+      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${bgClass} ${textClass} active:scale-95 transition-all`}
+    >
       {icon}
       <span>{label}</span>
       {isOnline && dbConnected && (
         <Database className="w-3 h-3 opacity-60" />
       )}
-    </div>
+    </button>
   );
 }

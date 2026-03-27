@@ -238,6 +238,33 @@ export function useTrips() {
     }
   }, [activeTripId, refreshPending]);
 
+  // Hard refresh: cloud data replaces local entirely
+  const hardRefresh = useCallback(async () => {
+    if (!isSupabaseConfigured() || !navigator.onLine) return;
+    setSyncing(true);
+    try {
+      const cloudTrips = await fetchTripsFromCloud();
+      if (cloudTrips) {
+        setTrips(cloudTrips);
+        saveTrips(cloudTrips);
+      }
+
+      if (activeTripId) {
+        const cloudExpenses = await fetchExpensesFromCloud(activeTripId);
+        if (cloudExpenses) {
+          setExpenses(cloudExpenses);
+          saveExpenses(activeTripId, cloudExpenses);
+        }
+      }
+
+      const connected = await checkDbConnection();
+      setDbConnected(connected);
+    } finally {
+      setSyncing(false);
+      refreshPending();
+    }
+  }, [activeTripId, refreshPending]);
+
   return {
     trips,
     activeTrip,
@@ -255,6 +282,7 @@ export function useTrips() {
     updateExpense,
     deleteExpense,
     refresh,
+    hardRefresh,
   };
 }
 
