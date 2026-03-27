@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
-import { X, Receipt, Tag } from 'lucide-react';
+import { X, Receipt, Tag, User } from 'lucide-react';
 import { categorizeExpense, CATEGORIES, getCategoryInfo } from '../utils/categorizer';
 import { getTodayString } from '../utils/helpers';
+
+const PAYERS = ['Senthil', 'Ami'];
 
 export default function ExpenseModal({ isOpen, onClose, onAddExpense, onUpdateExpense, editExpense }) {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState(getTodayString());
   const [category, setCategory] = useState('others');
+  const [paidBy, setPaidBy] = useState('Senthil');
   const [autoCategory, setAutoCategory] = useState(null);
 
   const isEditing = !!editExpense;
@@ -18,6 +21,7 @@ export default function ExpenseModal({ isOpen, onClose, onAddExpense, onUpdateEx
       setDescription(editExpense.description);
       setDate(editExpense.date);
       setCategory(editExpense.category);
+      setPaidBy(editExpense.paidBy || 'Senthil');
       setAutoCategory(null);
     } else {
       resetForm();
@@ -37,6 +41,7 @@ export default function ExpenseModal({ isOpen, onClose, onAddExpense, onUpdateEx
     setDescription('');
     setDate(getTodayString());
     setCategory('others');
+    setPaidBy('Senthil');
     setAutoCategory(null);
   }
 
@@ -49,6 +54,7 @@ export default function ExpenseModal({ isOpen, onClose, onAddExpense, onUpdateEx
       description: description.trim(),
       date,
       category,
+      paidBy,
     };
 
     if (isEditing) {
@@ -144,6 +150,29 @@ export default function ExpenseModal({ isOpen, onClose, onAddExpense, onUpdateEx
                     }`}
                 >
                   {cat.emoji} {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
+              <User className="w-4 h-4 inline mr-1" />
+              Paid By
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {PAYERS.map(name => (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => setPaidBy(name)}
+                  className={`py-2.5 px-3 rounded-xl text-sm font-medium transition-all
+                    ${paidBy === name
+                      ? 'ring-2 ring-primary bg-primary/10 text-primary'
+                      : 'bg-surface-dim text-text-secondary hover:bg-surface-dark'
+                    }`}
+                >
+                  {name}
                 </button>
               ))}
             </div>

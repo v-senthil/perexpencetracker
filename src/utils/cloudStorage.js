@@ -165,6 +165,7 @@ function mapExpenseToDB(tripId, expense) {
     description: expense.description,
     date: expense.date,
     category: expense.category,
+    paid_by: expense.paidBy || 'Senthil',
     created_at: expense.createdAt,
   };
 }
@@ -176,6 +177,7 @@ function mapExpenseFromDB(row) {
     description: row.description,
     date: row.date,
     category: row.category,
+    paidBy: row.paid_by || 'Senthil',
     createdAt: row.created_at,
   };
 }

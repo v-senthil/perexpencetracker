@@ -82,6 +82,49 @@ export default function Dashboard({ trip, expenses, onBack, onAddExpense, onUpda
               </div>
             </div>
 
+            {/* Split balance */}
+            {(() => {
+              const senthilPaid = expenses.filter(e => e.paidBy === 'Senthil').reduce((s, e) => s + e.amount, 0);
+              const amiPaid = expenses.filter(e => e.paidBy === 'Ami').reduce((s, e) => s + e.amount, 0);
+              const half = totalSpent / 2;
+              const senthilOwes = Math.max(0, half - senthilPaid);
+              const amiOwes = Math.max(0, half - amiPaid);
+              return (
+                <div className="bg-white rounded-2xl card-shadow p-4">
+                  <h3 className="text-sm font-semibold text-text-primary mb-3">Split Summary</h3>
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div className="bg-surface-dim rounded-xl p-3 text-center">
+                      <p className="text-xs text-text-muted mb-1">Senthil paid</p>
+                      <p className="text-base font-bold text-text-primary">{formatCurrency(senthilPaid)}</p>
+                    </div>
+                    <div className="bg-surface-dim rounded-xl p-3 text-center">
+                      <p className="text-xs text-text-muted mb-1">Ami paid</p>
+                      <p className="text-base font-bold text-text-primary">{formatCurrency(amiPaid)}</p>
+                    </div>
+                  </div>
+                  {senthilOwes > 0 && (
+                    <div className="bg-amber-50 rounded-xl p-3 text-center">
+                      <p className="text-sm font-semibold text-amber-700">
+                        Senthil owes Ami {formatCurrency(senthilOwes)}
+                      </p>
+                    </div>
+                  )}
+                  {amiOwes > 0 && (
+                    <div className="bg-amber-50 rounded-xl p-3 text-center">
+                      <p className="text-sm font-semibold text-amber-700">
+                        Ami owes Senthil {formatCurrency(amiOwes)}
+                      </p>
+                    </div>
+                  )}
+                  {senthilOwes === 0 && amiOwes === 0 && totalSpent > 0 && (
+                    <div className="bg-emerald-50 rounded-xl p-3 text-center">
+                      <p className="text-sm font-semibold text-emerald-700">All settled up! ✓</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             {/* Recent expenses */}
             {recentExpenses.length > 0 && (
               <div className="bg-white rounded-2xl card-shadow p-4">
@@ -107,6 +150,11 @@ export default function Dashboard({ trip, expenses, onBack, onAddExpense, onUpda
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-text-primary truncate">{exp.description}</p>
+                          {exp.paidBy && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                              {exp.paidBy}
+                            </span>
+                          )}
                         </div>
                         <p className="text-sm font-semibold text-text-primary shrink-0">
                           {formatCurrency(exp.amount)}

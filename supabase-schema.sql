@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS expenses (
   description TEXT NOT NULL,
   date TEXT NOT NULL,
   category TEXT NOT NULL DEFAULT 'others',
+  paid_by TEXT NOT NULL DEFAULT 'Senthil',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

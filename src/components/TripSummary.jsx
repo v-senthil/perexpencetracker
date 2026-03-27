@@ -94,6 +94,49 @@ export default function TripSummary({ trip, expenses, onBack }) {
         </div>
       </div>
 
+      {/* Split balance */}
+      {(() => {
+        const senthilPaid = expenses.filter(e => e.paidBy === 'Senthil').reduce((s, e) => s + e.amount, 0);
+        const amiPaid = expenses.filter(e => e.paidBy === 'Ami').reduce((s, e) => s + e.amount, 0);
+        const half = stats.total / 2;
+        const senthilOwes = Math.max(0, half - senthilPaid);
+        const amiOwes = Math.max(0, half - amiPaid);
+        return (
+          <div className="bg-white rounded-2xl card-shadow p-5">
+            <h3 className="text-sm font-semibold text-text-primary mb-3">Who Owes Whom</h3>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="bg-surface-dim rounded-xl p-3 text-center">
+                <p className="text-xs text-text-muted mb-1">Senthil paid</p>
+                <p className="text-lg font-bold text-text-primary">{formatCurrency(senthilPaid)}</p>
+              </div>
+              <div className="bg-surface-dim rounded-xl p-3 text-center">
+                <p className="text-xs text-text-muted mb-1">Ami paid</p>
+                <p className="text-lg font-bold text-text-primary">{formatCurrency(amiPaid)}</p>
+              </div>
+            </div>
+            {senthilOwes > 0 && (
+              <div className="bg-amber-50 rounded-xl p-3 text-center">
+                <p className="text-sm font-semibold text-amber-700">
+                  Senthil owes Ami {formatCurrency(senthilOwes)}
+                </p>
+              </div>
+            )}
+            {amiOwes > 0 && (
+              <div className="bg-amber-50 rounded-xl p-3 text-center">
+                <p className="text-sm font-semibold text-amber-700">
+                  Ami owes Senthil {formatCurrency(amiOwes)}
+                </p>
+              </div>
+            )}
+            {senthilOwes === 0 && amiOwes === 0 && stats.total > 0 && (
+              <div className="bg-emerald-50 rounded-xl p-3 text-center">
+                <p className="text-sm font-semibold text-emerald-700">All settled up! ✓</p>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {/* Expense count */}
       <div className="bg-white rounded-2xl card-shadow p-4 text-center">
         <p className="text-2xl font-bold text-text-primary">{expenses.length}</p>

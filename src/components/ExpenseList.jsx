@@ -93,6 +93,11 @@ export default function ExpenseList({ expenses, onDeleteExpense, onEditExpense }
                       </p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-xs text-text-muted">{cat.label}</span>
+                        {expense.paidBy && (
+                          <span className="text-xs px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                            {expense.paidBy}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="text-right shrink-0">
