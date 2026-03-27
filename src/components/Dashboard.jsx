@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, ArrowLeft, LayoutDashboard, List, BarChart3, Info } from 'lucide-react';
+import { Plus, ArrowLeft, LayoutDashboard, List, BarChart3, Info, Pencil, Check, X } from 'lucide-react';
 import BudgetBar from './BudgetBar';
 import ExpenseModal from './ExpenseModal';
 import ExpenseList from './ExpenseList';
@@ -17,10 +17,12 @@ const TABS = [
   { id: 'summary', label: 'Summary', icon: Info },
 ];
 
-export default function Dashboard({ trip, expenses, onBack, onAddExpense, onUpdateExpense, onDeleteExpense, isOnline, dbConnected, syncing, pendingSync }) {
+export default function Dashboard({ trip, expenses, onBack, onAddExpense, onUpdateExpense, onDeleteExpense, onUpdateTrip, isOnline, dbConnected, syncing, pendingSync }) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showModal, setShowModal] = useState(false);
   const [editExpense, setEditExpense] = useState(null);
+  const [editingBudget, setEditingBudget] = useState(false);
+  const [budgetInput, setBudgetInput] = useState('');
 
   const totalSpent = expenses.reduce((s, e) => s + e.amount, 0);
   const recentExpenses = [...expenses].slice(0, 5);
@@ -48,9 +50,45 @@ export default function Dashboard({ trip, expenses, onBack, onAddExpense, onUpda
           </button>
           <div className="flex-1 min-w-0">
             <h1 className="text-base font-bold text-text-primary truncate">{trip.name}</h1>
-            <p className="text-xs text-text-muted">
-              {formatCurrency(totalSpent)} of {formatCurrency(trip.budget)} spent
-            </p>
+            {editingBudget ? (
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-xs text-text-muted">₹</span>
+                <input
+                  type="number"
+                  value={budgetInput}
+                  onChange={e => setBudgetInput(e.target.value)}
+                  autoFocus
+                  className="w-24 text-xs px-1.5 py-0.5 rounded border border-border bg-white outline-none focus:border-primary"
+                  min="1"
+                />
+                <button
+                  onClick={() => {
+                    const val = Number(budgetInput);
+                    if (val > 0) onUpdateTrip(trip.id, { budget: val });
+                    setEditingBudget(false);
+                  }}
+                  className="p-0.5 rounded hover:bg-emerald-50 text-emerald-600"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setEditingBudget(false)}
+                  className="p-0.5 rounded hover:bg-red-50 text-red-500"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <p className="text-xs text-text-muted flex items-center gap-1">
+                {formatCurrency(totalSpent)} of {formatCurrency(trip.budget)} spent
+                <button
+                  onClick={() => { setBudgetInput(String(trip.budget)); setEditingBudget(true); }}
+                  className="p-0.5 rounded hover:bg-surface-dark text-text-muted hover:text-primary transition-colors"
+                >
+                  <Pencil className="w-3 h-3" />
+                </button>
+              </p>
+            )}
           </div>
           <SyncStatusBar
             isOnline={isOnline}

@@ -16,6 +16,7 @@ export default function App() {
     syncing,
     pendingSync,
     createTrip,
+    updateTrip,
     deleteTrip,
     openTrip,
     closeTrip,
@@ -50,6 +51,7 @@ export default function App() {
           onAddExpense={addExpense}
           onUpdateExpense={updateExpense}
           onDeleteExpense={deleteExpense}
+          onUpdateTrip={updateTrip}
           isOnline={isOnline}
           dbConnected={dbConnected}
           syncing={syncing}

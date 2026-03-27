@@ -133,6 +133,15 @@ export function useTrips() {
     return newTrip;
   }, [refreshPending]);
 
+  const updateTrip = useCallback((tripId, updates) => {
+    setTrips(prev => prev.map(t => {
+      if (t.id !== tripId) return t;
+      const updated = { ...t, ...updates };
+      upsertTripToCloud(updated).then(refreshPending);
+      return updated;
+    }));
+  }, [refreshPending]);
+
   const deleteTrip = useCallback((tripId) => {
     setTrips(prev => prev.filter(t => t.id !== tripId));
     if (activeTripId === tripId) {
@@ -223,6 +232,7 @@ export function useTrips() {
     syncing,
     pendingSync,
     createTrip,
+    updateTrip,
     deleteTrip,
     openTrip,
     closeTrip,
