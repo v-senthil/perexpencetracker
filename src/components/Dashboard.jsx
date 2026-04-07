@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, ArrowLeft, LayoutDashboard, List, BarChart3, Info, Pencil, Check, X } from 'lucide-react';
+import { Plus, ArrowLeft, LayoutDashboard, List, BarChart3, Info, Pencil, Check, X, HandCoins, Trash2 } from 'lucide-react';
 import BudgetBar from './BudgetBar';
 import ExpenseModal from './ExpenseModal';
 import ExpenseList from './ExpenseList';
@@ -8,7 +8,8 @@ import SmartSuggestions from './SmartSuggestions';
 import TripSummary from './TripSummary';
 import SyncStatusBar from './SyncStatusBar';
 import ConfirmModal from './ConfirmModal';
-import { formatCurrency } from '../utils/helpers';
+import SettleUpModal from './SettleUpModal';
+import { formatCurrency, formatDateShort } from '../utils/helpers';
 import { getCategoryInfo } from '../utils/categorizer';
 
 const TABS = [
@@ -18,13 +19,15 @@ const TABS = [
   { id: 'summary', label: 'Summary', icon: Info },
 ];
 
-export default function Dashboard({ trip, expenses, onBack, onAddExpense, onUpdateExpense, onDeleteExpense, onUpdateTrip, isOnline, dbConnected, syncing, pendingSync, onHardRefresh }) {
+export default function Dashboard({ trip, expenses, settlements, onBack, onAddExpense, onUpdateExpense, onDeleteExpense, onAddSettlement, onDeleteSettlement, onUpdateTrip, isOnline, dbConnected, syncing, pendingSync, onHardRefresh }) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showModal, setShowModal] = useState(false);
   const [editExpense, setEditExpense] = useState(null);
   const [editingBudget, setEditingBudget] = useState(false);
   const [budgetInput, setBudgetInput] = useState('');
   const [deleteExpenseTarget, setDeleteExpenseTarget] = useState(null);
+  const [settleUpInfo, setSettleUpInfo] = useState(null);
+  const [deleteSettlementTarget, setDeleteSettlementTarget] = useState(null);
 
   const totalSpent = expenses.reduce((s, e) => s + e.amount, 0);
   const recentExpenses = [...expenses].slice(0, 5);
@@ -128,8 +131,17 @@ export default function Dashboard({ trip, expenses, onBack, onAddExpense, onUpda
               const senthilPaid = expenses.filter(e => e.paidBy === 'Senthil').reduce((s, e) => s + e.amount, 0);
               const amiPaid = expenses.filter(e => e.paidBy === 'Ami').reduce((s, e) => s + e.amount, 0);
               const half = totalSpent / 2;
-              const senthilOwes = Math.max(0, half - senthilPaid);
-              const amiOwes = Math.max(0, half - amiPaid);
+
+              // Factor in settlements
+              const senthilSettled = settlements.filter(s => s.from === 'Senthil').reduce((sum, s) => sum + s.amount, 0);
+              const amiSettled = settlements.filter(s => s.from === 'Ami').reduce((sum, s) => sum + s.amount, 0);
+
+              // Net balance: positive means they owe, negative means they're owed
+              const senthilNet = Math.max(0, half - senthilPaid) - senthilSettled + amiSettled;
+              const amiNet = Math.max(0, half - amiPaid) - amiSettled + senthilSettled;
+
+              const senthilOwes = Math.max(0, senthilNet);
+              const amiOwes = Math.max(0, amiNet);
               return (
                 <div className="bg-white rounded-2xl card-shadow p-4">
                   <h3 className="text-sm font-semibold text-text-primary mb-3">Split Summary</h3>
@@ -144,22 +156,68 @@ export default function Dashboard({ trip, expenses, onBack, onAddExpense, onUpda
                     </div>
                   </div>
                   {senthilOwes > 0 && (
-                    <div className="bg-amber-50 rounded-xl p-3 text-center">
+                    <div className="bg-amber-50 rounded-xl p-3 text-center mb-2">
                       <p className="text-sm font-semibold text-amber-700">
                         Senthil owes Ami {formatCurrency(senthilOwes)}
                       </p>
+                      <button
+                        onClick={() => setSettleUpInfo({ from: 'Senthil', to: 'Ami', amount: senthilOwes })}
+                        className="mt-2 px-4 py-1.5 rounded-lg text-xs font-semibold text-white
+                                   bg-emerald-500 hover:bg-emerald-600 transition-colors
+                                   shadow-sm shadow-emerald-500/20"
+                      >
+                        Settle Up
+                      </button>
                     </div>
                   )}
                   {amiOwes > 0 && (
-                    <div className="bg-amber-50 rounded-xl p-3 text-center">
+                    <div className="bg-amber-50 rounded-xl p-3 text-center mb-2">
                       <p className="text-sm font-semibold text-amber-700">
                         Ami owes Senthil {formatCurrency(amiOwes)}
                       </p>
+                      <button
+                        onClick={() => setSettleUpInfo({ from: 'Ami', to: 'Senthil', amount: amiOwes })}
+                        className="mt-2 px-4 py-1.5 rounded-lg text-xs font-semibold text-white
+                                   bg-emerald-500 hover:bg-emerald-600 transition-colors
+                                   shadow-sm shadow-emerald-500/20"
+                      >
+                        Settle Up
+                      </button>
                     </div>
                   )}
                   {senthilOwes === 0 && amiOwes === 0 && totalSpent > 0 && (
                     <div className="bg-emerald-50 rounded-xl p-3 text-center">
                       <p className="text-sm font-semibold text-emerald-700">All settled up! ✓</p>
+                    </div>
+                  )}
+
+                  {/* Settlement history */}
+                  {settlements.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-border/50">
+                      <h4 className="text-xs font-semibold text-text-muted mb-2">Settlement History</h4>
+                      <div className="space-y-2">
+                        {settlements.slice(0, 3).map(s => (
+                          <div key={s.id} className="flex items-center gap-2 bg-emerald-50/50 rounded-lg p-2">
+                            <HandCoins className="w-4 h-4 text-emerald-500 shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-text-primary">
+                                <span className="font-semibold">{s.from}</span> paid <span className="font-semibold">{s.to}</span>
+                              </p>
+                              <p className="text-[10px] text-text-muted">{formatDateShort(s.date)}</p>
+                            </div>
+                            <p className="text-xs font-bold text-emerald-600 shrink-0">{formatCurrency(s.amount)}</p>
+                            <button
+                              onClick={() => setDeleteSettlementTarget(s.id)}
+                              className="p-1 rounded hover:bg-red-50 text-text-muted hover:text-red-500 transition-colors shrink-0"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                        {settlements.length > 3 && (
+                          <p className="text-[10px] text-text-muted text-center">+{settlements.length - 3} more</p>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -222,7 +280,7 @@ export default function Dashboard({ trip, expenses, onBack, onAddExpense, onUpda
         )}
 
         {activeTab === 'summary' && (
-          <TripSummary trip={trip} expenses={expenses} onBack={onBack} />
+          <TripSummary trip={trip} expenses={expenses} settlements={settlements} onBack={onBack} onAddSettlement={onAddSettlement} onDeleteSettlement={onDeleteSettlement} />
         )}
       </div>
 
@@ -277,6 +335,28 @@ export default function Dashboard({ trip, expenses, onBack, onAddExpense, onUpda
           setDeleteExpenseTarget(null);
         }}
         onCancel={() => setDeleteExpenseTarget(null)}
+      />
+
+      {/* Delete settlement confirmation */}
+      <ConfirmModal
+        isOpen={!!deleteSettlementTarget}
+        title="Delete Settlement"
+        message="Are you sure you want to undo this settlement? The balance will be recalculated."
+        onConfirm={() => {
+          if (deleteSettlementTarget) onDeleteSettlement(deleteSettlementTarget);
+          setDeleteSettlementTarget(null);
+        }}
+        onCancel={() => setDeleteSettlementTarget(null)}
+      />
+
+      {/* Settle up modal */}
+      <SettleUpModal
+        isOpen={!!settleUpInfo}
+        onClose={() => setSettleUpInfo(null)}
+        onSettle={onAddSettlement}
+        from={settleUpInfo?.from}
+        to={settleUpInfo?.to}
+        owedAmount={settleUpInfo?.amount || 0}
       />
     </div>
   );

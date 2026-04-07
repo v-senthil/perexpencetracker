@@ -11,6 +11,7 @@ export default function App() {
     trips,
     activeTrip,
     expenses,
+    settlements,
     isOnline,
     dbConnected,
     syncing,
@@ -23,6 +24,8 @@ export default function App() {
     addExpense,
     updateExpense,
     deleteExpense,
+    addSettlement,
+    deleteSettlement,
     refresh,
     hardRefresh,
   } = useTrips();
@@ -48,10 +51,13 @@ export default function App() {
         <Dashboard
           trip={activeTrip}
           expenses={expenses}
+          settlements={settlements}
           onBack={closeTrip}
           onAddExpense={addExpense}
           onUpdateExpense={updateExpense}
           onDeleteExpense={deleteExpense}
+          onAddSettlement={addSettlement}
+          onDeleteSettlement={deleteSettlement}
           onUpdateTrip={updateTrip}
           isOnline={isOnline}
           dbConnected={dbConnected}

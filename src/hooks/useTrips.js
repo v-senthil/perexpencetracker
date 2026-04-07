@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { getTrips, saveTrips, getExpenses, saveExpenses } from '../utils/storage';
+import { getTrips, saveTrips, getExpenses, saveExpenses, getSettlements, saveSettlements } from '../utils/storage';
 import { generateId } from '../utils/helpers';
 import { isSupabaseConfigured, checkDbConnection } from '../utils/supabase';
 import { getSyncQueue } from '../utils/syncQueue';
@@ -17,6 +17,7 @@ export function useTrips() {
   const [trips, setTrips] = useState(() => getTrips());
   const [activeTripId, setActiveTripId] = useState(null);
   const [expenses, setExpenses] = useState([]);
+  const [settlements, setSettlements] = useState([]);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [dbConnected, setDbConnected] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -129,6 +130,22 @@ export function useTrips() {
     }
   }, [activeTripId]);
 
+  // Load settlements when active trip changes
+  useEffect(() => {
+    if (activeTripId) {
+      setSettlements(getSettlements(activeTripId));
+    } else {
+      setSettlements([]);
+    }
+  }, [activeTripId]);
+
+  // Save settlements to localStorage
+  useEffect(() => {
+    if (activeTripId) {
+      saveSettlements(activeTripId, settlements);
+    }
+  }, [activeTripId, settlements]);
+
   // Save expenses to localStorage
   useEffect(() => {
     if (activeTripId) {
@@ -205,6 +222,20 @@ export function useTrips() {
     deleteExpenseFromCloud(expenseId).then(refreshPending);
   }, [refreshPending]);
 
+  const addSettlement = useCallback((settlementData) => {
+    const newSettlement = {
+      id: generateId(),
+      createdAt: new Date().toISOString(),
+      ...settlementData,
+    };
+    setSettlements(prev => [newSettlement, ...prev]);
+    return newSettlement;
+  }, []);
+
+  const deleteSettlement = useCallback((settlementId) => {
+    setSettlements(prev => prev.filter(s => s.id !== settlementId));
+  }, []);
+
   const refresh = useCallback(async () => {
     if (!isSupabaseConfigured() || !navigator.onLine) return;
     setSyncing(true);
@@ -269,6 +300,7 @@ export function useTrips() {
     trips,
     activeTrip,
     expenses,
+    settlements,
     isOnline,
     dbConnected,
     syncing,
@@ -281,6 +313,8 @@ export function useTrips() {
     addExpense,
     updateExpense,
     deleteExpense,
+    addSettlement,
+    deleteSettlement,
     refresh,
     hardRefresh,
   };
